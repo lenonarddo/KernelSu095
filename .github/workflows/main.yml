@@ -1,0 +1,33 @@
+name: Clone and Push Kernelsu to Tag
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clone-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout empty repo (your repo)
+      uses: actions/checkout@v4
+
+    - name: Clone KernelSU kernel source
+      run: |
+        git clone --depth=1 --branch v0.9.5 https://github.com/tiann/KernelSU tmp
+        mv tmp/* ./
+        mv tmp/.* . || true
+        rm ./tmp -rf
+
+    - name: Re-init git
+      run: |
+        rm -rf .git
+        git init
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "reinit"
+
+    - name: Push to your repo
+      run: |
+        git remote add origin https://x-access-token:${{ secrets.PUSH_TOKEN }}@github.com/${{ github.repository }}
+        git push -f origin HEAD:main
